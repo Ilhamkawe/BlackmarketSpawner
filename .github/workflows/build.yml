@@ -37,9 +37,16 @@ jobs:
           }
 
       - name: Restore and Build BlackmarketNpc
-        env:
-          REFERENCE_PATH: "${{ github.workspace }}/../RocketRadiationStorm/Modules/Rocket.Unturned;${{ github.workspace }}/../RocketRadiationStorm/lib;${{ github.workspace }}/RocketModFix.Unturned.Redist.Server.3.25.9.2/lib/net48"
-        run: dotnet build "${{ github.workspace }}/BlackmarketNpc.csproj" -c Release -p:ReferencePath="$env:REFERENCE_PATH"
+        shell: pwsh
+        run: |
+          $workspace = "${{ github.workspace }}"
+          $parentDir = Split-Path -Parent $workspace
+          $rocketModules = Join-Path $parentDir "RocketRadiationStorm\Modules\Rocket.Unturned"
+          $rocketLib = Join-Path $parentDir "RocketRadiationStorm\lib"
+          $localLib = Join-Path $workspace "RocketModFix.Unturned.Redist.Server.3.25.9.2\lib\net48"
+          $referencePath = "$rocketModules;$rocketLib;$localLib"
+          Write-Host "ReferencePath: $referencePath"
+          dotnet build "$workspace\BlackmarketNpc.csproj" -c Release -p:"ReferencePath=$referencePath"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
