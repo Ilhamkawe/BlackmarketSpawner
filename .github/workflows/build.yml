@@ -37,7 +37,6 @@ jobs:
           }
 
       - name: Restore and Build BlackmarketNpc
-        shell: pwsh
         run: |
           $workspace = "${{ github.workspace }}"
           $parentDir = Split-Path -Parent $workspace
@@ -46,14 +45,10 @@ jobs:
           $localLib = Join-Path $workspace "RocketModFix.Unturned.Redist.Server.3.25.9.2\lib\net48"
           $referencePath = "$rocketModules;$rocketLib;$localLib"
           Write-Host "ReferencePath: $referencePath"
-          $projectPath = Join-Path $workspace "BlackmarketNpc.csproj"
-          $buildArgs = @(
-            "build",
-            $projectPath,
-            "-c", "Release",
-            "/p:ReferencePath=$referencePath"
-          )
-          & dotnet $buildArgs
+          $responseFile = Join-Path $workspace "build.rsp"
+          "/p:ReferencePath=$referencePath" | Out-File -FilePath $responseFile -Encoding utf8 -NoNewline
+          dotnet build "$workspace\BlackmarketNpc.csproj" -c Release "@$responseFile"
+          Remove-Item $responseFile -ErrorAction SilentlyContinue
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
