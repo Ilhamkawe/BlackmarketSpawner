@@ -3,11 +3,7 @@ name: Build BlackmarketNpc
 on:
   push:
     branches: [ main, master ]
-    paths:
-      - 'BlackmarketNpc/**'
   pull_request:
-    paths:
-      - 'BlackmarketNpc/**'
 
 jobs:
   build:
@@ -16,21 +12,38 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
+      - name: Setup Dependencies
+        run: |
+          # Check if RocketRadiationStorm exists in parent directory
+          $parentDir = Split-Path -Parent "${{ github.workspace }}"
+          $rocketPath = "$parentDir\RocketRadiationStorm"
+          
+          if (-not (Test-Path $rocketPath)) {
+            Write-Host "RocketRadiationStorm not found at $rocketPath"
+            Write-Host "Attempting to clone from repository..."
+            # You can add git clone here if RocketRadiationStorm is in a separate repo
+            # git clone <repo-url> $rocketPath
+            Write-Host "Please ensure RocketRadiationStorm is available or add it as a submodule"
+          } else {
+            Write-Host "RocketRadiationStorm found at $rocketPath"
+          }
+
       - name: Restore and Build BlackmarketNpc
         env:
-          REFERENCE_PATH: "${{ github.workspace }}/RocketRadiationStorm/Modules/Rocket.Unturned;${{ github.workspace }}/RocketRadiationStorm/lib;${{ github.workspace }}/BlackmarketNpc/RocketModFix.Unturned.Redist.Server.3.25.9.2/lib/net48"
-        run: dotnet build "${{ github.workspace }}/BlackmarketNpc/BlackmarketNpc.csproj" -c Release -p:ReferencePath="$env:REFERENCE_PATH"
+          REFERENCE_PATH: "${{ github.workspace }}/../RocketRadiationStorm/Modules/Rocket.Unturned;${{ github.workspace }}/../RocketRadiationStorm/lib;${{ github.workspace }}/RocketModFix.Unturned.Redist.Server.3.25.9.2/lib/net48"
+        run: dotnet build "${{ github.workspace }}/BlackmarketNpc.csproj" -c Release -p:ReferencePath="$env:REFERENCE_PATH"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: BlackmarketNpc
           path: |
-            BlackmarketNpc/bin/Release/net48/
-
+            bin/Release/net48/
