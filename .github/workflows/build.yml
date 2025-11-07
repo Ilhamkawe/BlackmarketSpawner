@@ -46,7 +46,14 @@ jobs:
           $localLib = Join-Path $workspace "RocketModFix.Unturned.Redist.Server.3.25.9.2\lib\net48"
           $referencePath = "$rocketModules;$rocketLib;$localLib"
           Write-Host "ReferencePath: $referencePath"
-          dotnet build "$workspace\BlackmarketNpc.csproj" -c Release -p:"ReferencePath=$referencePath"
+          $projectPath = Join-Path $workspace "BlackmarketNpc.csproj"
+          $buildArgs = @(
+            "build",
+            $projectPath,
+            "-c", "Release",
+            "/p:ReferencePath=$referencePath"
+          )
+          & dotnet $buildArgs
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
